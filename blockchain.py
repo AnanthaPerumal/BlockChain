@@ -50,17 +50,14 @@ class BlockChain(object):
         self.chain = chain
 
     def add(self,block):
-        self.chain.append({
-                'number' : block.number,
-                'hash':block.hash(),
-                'previous' : block.previous_hash,
-                'data' : block.data,
-                'nonce' : block.nonce
-            })
+        self.chain.append(block)
+
+    def remove(self, block):
+        self.chain.remove(block)
 
     def mine(self, block):
         try:
-            block.previous_hash = self.chain[-1].get('hash')
+            block.previous_hash = self.chain[-1].hash()
         except IndexError:
             pass
 
@@ -71,6 +68,16 @@ class BlockChain(object):
             else:
                 block.nonce +=1
 
+    def isValid(self):
+        for i in range(1, len(self.chain)):
+            previous_hash = self.chain[i].previous_hash
+            current_hash = self.chain[i-1].hash()
+            self_hash = self.chain[i].hash()
+            if previous_hash != current_hash or self_hash[:self.difficulty] != "0" * self.difficulty:
+                return "Blockchain is not valid: Block "+ str(i+1) +" seems to be changed"
+                + " is not valid"
+        return "Blockchain is valid"
+
 def main():
     blockchain = BlockChain()
     database = ["data 1", "data 2", "data 3"]
@@ -79,12 +86,14 @@ def main():
     for data in database:
         num += 1
         blockchain.mine(Block(data,num))
-    print("BlockChain : ")
-    print(blockchain.chain)
+
+    blockchain.chain[2].data = "New Data"
 
     for block in blockchain.chain:
         print("Block :")
         print(block)
+
+    print(blockchain.isValid())
 
 if __name__ == '__main__':
     main()
